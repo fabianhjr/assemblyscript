@@ -244,7 +244,8 @@ export function normalizePath(p) {
 }
 
 /** Resolves a single possibly relative path. Keeps absolute paths, otherwise prepends baseDir. */
-export function resolvePath(p, baseDir, useNodeResolution = false) {
+export function resolvePath(pWithMaybeExt, baseDir, useNodeResolution = false) {
+  const p = pWithMaybeExt.endsWith('.ts') ? pWithMaybeExt.slice(0, -3) : pWithMaybeExt;
   if (path.isAbsolute(p)) return p;
   if (useNodeResolution && !p.startsWith(".") && require.resolve) {
     return require.resolve(p, { paths: [ baseDir ] });
