@@ -488,7 +488,9 @@ export async function main(argv, options) {
     if (libPath.includes("/")) return; // in sub-directory: imported on demand
     let begin = stats.begin();
     stats.parseCount++;
-    assemblyscript.parse(program, libraryFiles[libPath], libraryPrefix + libPath + extension, false);
+    const path = libraryPrefix + libPath;
+    const pathWithExtension = path.endsWith(extension) ? path : path + extension;
+    assemblyscript.parse(program, libraryFiles[libPath], pathWithExtension, false);
     stats.parseTime += stats.end(begin);
   });
   let customLibDirs = [];
@@ -526,15 +528,16 @@ export async function main(argv, options) {
 
   // Gets the file matching the specified source path, imported at the given dependee path
   async function getFile(internalPath, dependeePath) {
+    const internalPathWithExtension = internalPath.endsWith(extension) ? internalPath : internalPath + extension;
     let sourceText = null; // text reported back to the compiler
     let sourcePath = null; // path reported back to the compiler
 
     // Try file.ext, file/index.ext, file.d.ext
     if (!internalPath.startsWith(libraryPrefix)) {
-      if ((sourceText = await readFile(sourcePath = internalPath + extension, baseDir)) == null) {
-        if ((sourceText = await readFile(sourcePath = internalPath + "/index" + extension, baseDir)) == null) {
+      if ((sourceText = await readFile(sourcePath = internalPathWithExtension, baseDir)) == null) {
+        if (!internalPath.endsWith(extension) && (sourceText = await readFile(sourcePath = internalPath + "/index" + extension, baseDir)) == null) {
           // portable d.ext: uses the .js file next to it in JS or becomes an import in Wasm
-          sourcePath = internalPath + extension;
+          sourcePath = internalPathWithExtension;
           sourceText = await readFile(internalPath + extension_d, baseDir);
         }
       }
